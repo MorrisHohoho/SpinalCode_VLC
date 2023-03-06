@@ -1,5 +1,6 @@
 #include<math.h>
 #include<stdlib.h>
+#include<stdint.h>
 #include "multinodetree/multinodetree.h"
 #include "encoder/encoder.h"
 #include "jenkins_hash/spooky-c.h"
@@ -13,13 +14,13 @@ void BuildChild(struct MultiTree* parent,int *symbol,int k,int c)
     for(int i=0;i<(1<<k);i++)
     {
         //Create SpineValue
-        char tmp_symbol=(char)i;
-        tmp_rng.spineValue=spooky_hash32(&tmp_symbol,sizeof(tmp_symbol),parent->spine_value);
+        uint32_t predict_message=i;  
+        tmp_rng.spineValue=spooky_hash32(&predict_message,sizeof(predict_message),parent->spine_value);
         tmp_rng.c=c;
 
         //Create predict symbol
         srand(tmp_rng.spineValue);
-        int range = 2<<(c-1);
+        int range = 1<<c;
         predict_symbol = rand()%range;
 
         //Compute the cost
@@ -71,4 +72,9 @@ void PruningTree(struct MultiTree* parent,int k,int B)
         free(parent->child[i]);
         parent->child[i]=NULL;
     }
+}
+
+void SortingTree(struct MultiTree* parent,int k)
+{
+        quick_sort(parent,0,(1<<k)-1);
 }

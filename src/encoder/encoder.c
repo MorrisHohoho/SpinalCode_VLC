@@ -1,16 +1,17 @@
-#include<string.h>
-#include<stdlib.h>
-#include<math.h>
 #include "encoder/encoder.h"
 #include"jenkins_hash/spooky-c.h"
-
-void DiviedMessage(const char *s, int k, char *res)
+#define C_IN_ENCODER 6.0
+void DiviedMessage(const char *s, int k, uint32_t *res)
 {
     int m = (strlen(s) * 8 / k);
+    if((strlen(s)*8)%k!=0)
+    m++;
+
     int pointer = 0;
     int count = 0;
+
     for (int i = 0; i < m; i++)
-        res[i] = '\0';
+        res[i] = 0 ;
 
     for (int i = 0; i < m; i++)
     {
@@ -55,22 +56,26 @@ void SpinalEncode(const char* message,char* symbols,int symbol_packet_len,int k,
 {
     /************************ Step 1: Initialization ***********************/
 
-    //  分割信息
+    //Divide Message into pieces,every piece has k bit.
     int packet_len = strlen(message) * 8 / k;
-    char divideMessage[packet_len];
+
+    if((strlen(message)*8)%k!=0)
+    packet_len++;
+
+    uint32_t divideMessage[packet_len];
+
     DiviedMessage(message, k, divideMessage);
 
     /************************ Step 2: Encoding ***********************/
 
-    // 初始化
-    int s_0 = 0; // 最初的s0
+    int s_0 = 0; 
     RNG rngs[packet_len];
 
     // RNG[0]
     rngs[0].spineValue = spooky_hash32(&divideMessage[0], sizeof(divideMessage[0]), s_0);
     rngs[0].c = c;
 
-    // 计算后续RNG
+    // Calculate the next RNG
     for (int i = 1; i < packet_len; i++)
     {
         rngs[i].spineValue = spooky_hash32(&divideMessage[i], sizeof(divideMessage[i]), rngs[i - 1].spineValue);
@@ -79,11 +84,11 @@ void SpinalEncode(const char* message,char* symbols,int symbol_packet_len,int k,
 
     // generate pesudo-random number
     int tmp_symbol[packet_len];
+    int range = 1<<c;       //which equals to pow(2,6);
     for (int i = 0; i < packet_len; i++)
     {
-        srand(rngs[i].spineValue);
-        double range = pow(2, 6);
-        tmp_symbol[i] = rand() % (int)range;
+        srand(rngs[i].spineValue); 
+        tmp_symbol[i] = rand() % range;
     }
 
     // generate symbols

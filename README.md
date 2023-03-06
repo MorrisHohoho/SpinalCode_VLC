@@ -1,5 +1,5 @@
 # SpinalCode_C
-SpinalCode implementation by C.
+SpinalCode implementation in C.
 # Warning
 Still in Development
 # How to use
