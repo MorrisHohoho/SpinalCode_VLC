@@ -21,4 +21,6 @@ void BuildChild(struct MultiTree* parent,int *symbol,int k,int c);
 
 void PruningTree(struct MultiTree* parent,int k,int B);
 
+void SortingTree(struct MultiTree* parent,int k);
+
 #endif

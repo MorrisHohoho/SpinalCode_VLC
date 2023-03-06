@@ -12,9 +12,8 @@ int B = 4; //
 
 int main()
 {
-
     // byte = char, ASCII编码，每个8位
-    char *message = "sichuan,university";    
+    char *message = "1233";    
     int message_len = strlen(message);
     int symbol_packet_len = (message_len * 8 / k) * c / 8;
     char symbols[symbol_packet_len];
