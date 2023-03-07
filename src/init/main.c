@@ -13,7 +13,7 @@ int B = 4; //
 int main()
 {
     // byte = char, ASCII编码，每个8位
-    char *message = "1233";    
+    char *message = "IIII";    
     int message_len = strlen(message);
     int symbol_packet_len = (message_len * 8 / k) * c / 8;
     char symbols[symbol_packet_len];
@@ -29,6 +29,9 @@ int main()
     for(int i=0;i<message_len;i++)
     decoded_message[i]='\0';
     SpinalDecode(symbols,decoded_message,message_len,k,c,B);
+
+    for(int i=0;i<4;i++)
+    printf("%c",decoded_message[i]);
 
     return 0;
 }

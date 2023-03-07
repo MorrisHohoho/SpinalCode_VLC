@@ -43,23 +43,24 @@ void getDecodedSymbols(struct MultiTree *pointer, int *decoded_symbol, int len, 
     }
 }
 
-void getDecodedMessage(const int *decoded_symbol, char *decoded_message, int len, int k)
+void getDecodedMessage(struct MultiTree *node, char *decoded_message, int len, int k)
 {
     int pointer = 0;
     int counter = 0;
-    for (int i = 0; i < len; i++)
+    for (int i = len-1; i >=0; i--)
     {
+        
         for (int j = 0; j < 8; j++)
         {
-            decoded_message[i] |= ((decoded_symbol[counter] & (1 << k - pointer - 1))) >> (k - pointer - 1) == 1 ? (1 << 8 - j - 1) : 0;
+            int decoded_symbol = node->message_int;
+            decoded_message[i] |= ((decoded_symbol & (1 <<pointer))) >> pointer == 1 ? (1 << j) : 0;
             ++pointer;
             if (pointer == k)
             {
-                ++counter;
+                node = node->parent;
                 pointer = 0;
             }
         }
-        printf("%c", decoded_message[i]);
     }
 }
 
@@ -174,7 +175,7 @@ void SpinalDecode(const char *symbols, char *decoded_message, int message_len, i
     }
     best_node=tailNode;
 
-    getDecodedMessage(best_node,decoded_message);
+    getDecodedMessage(best_node,decoded_message,4,k);
 }
 
 void swap_candidates(struct Candidate *a, struct Candidate *b)
