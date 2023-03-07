@@ -5,7 +5,11 @@
 
 
 //ERROR1:The implementation of Multinode Tree is using malloc. 
-//       But, i still do not  free them yet. 
+//       But, I do not free them yet. 
+
+//ERROR2:Hash Collision still happens. Perhaps Hamming Code can solve this problem.
+
+
 void Symbols2Int(const char *symbols, int *res, int len, int c)
 {
     int pointer = 0;
@@ -34,23 +38,6 @@ void getDecodedSymbols(struct MultiTree *pointer, int *decoded_symbol, int len, 
         tmp_cost[i] = 0;
     for (int i = 0; i < len; i++)
     {
-        // for (int j = 0; j < B; j++)
-        // {
-        //     if (pointer->child[j]->child[0] != NULL)
-        //         tmp_cost[j] = pointer->child[j]->cost + pointer->child[j]->child[0]->cost;
-        //     else
-        //         tmp_cost[j] = pointer->child[j]->cost;
-        // }
-        // int tmp_caluate = INT16_MAX;
-        // int index = 0;
-        // for (int j = 0; j < B; j++)
-        // {
-        //     if (tmp_cost[j] < tmp_caluate)
-        //     {
-        //         tmp_caluate = tmp_cost[j];
-        //         index = j;
-        //     }
-        // }
         decoded_symbol[i] = pointer->child[0]->message_int;
         pointer = pointer->child[0];
     }
@@ -146,43 +133,48 @@ void SpinalDecode(const char *symbols, char *decoded_message, int message_len, i
     }
 
 
-    /********GET THE BEST PATH*********/
+    //Find the best node.
     int minCost=INT32_MAX;
     struct MultiTree* best_node = &root;
     for(int i=1;i<beam.pfVectorTotal(&beam);i++)
     {
+        if((i-1)%B==0)
+        minCost=INT32_MAX;       
         struct MultiTree* current_node = beam.pfVectorGet(&beam,i);
         for(int j =i+B;j<i+B+4;j++)
         {
+            if(j<29)
+            {
             struct MultiTree* tmp_node = beam.pfVectorGet(&beam,j);
             if(tmp_node->parent==current_node)
             {
                 int tmp_cost = current_node->cost+tmp_node->cost;
                 if(tmp_cost<minCost)
-                best_node=current_node;
+                {
+                    best_node=current_node;
+                    minCost=tmp_cost;
+                    if(j>=25)
+                    {
+                        best_node=tmp_node;
+                    }
+                }
+            }
             }
         }
     }
-    // struct MultiTree *pointer = &root;
-    // for (int i = 1; i < symbols_integer_len; i++)
-    // {
-    //     for (int j = 0; j < B; j++)
-    //     {
-    //             BuildChild(pointer->child[j], symbols_integer, k, c);
-    //             PruningTree(pointer->child[j], k, B);
-    //     }
+    int tailCost = INT32_MAX;
+    struct Multitree *tailNode ;
+    for(int i=0;i<CHILD_NUMS;i++)
+    {
+        if(best_node->child[i]->cost<=tailCost)
+        {
+            tailNode=best_node->child[i];
+            tailCost=best_node->child[i]->cost;
+        }
+    }
+    best_node=tailNode;
 
-    //     pointer = pointer->child[0]; // 指向下一层;
-    // }
-
-    // //Get Decode Symbol
-    // pointer = &root;
-    // int decoded_symbol[symbols_integer_len];
-    // for(int i=0;i<symbols_integer_len;i++)
-    // decoded_symbol[i]=0;
-    // getDecodedSymbols(pointer,decoded_symbol,symbols_integer_len,B);
-
-    // getDecodedMessage(decoded_symbol,decoded_message,message_len,k);
+    getDecodedMessage(best_node,decoded_message);
 }
 
 void swap_candidates(struct Candidate *a, struct Candidate *b)
