@@ -12,8 +12,9 @@ int B = 4; //
 
 int main()
 {
-    // byte = char, ASCII编码，每个8位
-    char *message = "cargoforwardin2021QA";    
+    // byte = char, char encoded in ASCII, 8 bits per char.
+    //Totally 256bits.
+    char *message = "cargoforwardin2021QA123490010XCA";    
     int message_len = strlen(message);
     int symbol_packet_len = (message_len * 8 / k) * c / 8;
     char symbols[symbol_packet_len];
