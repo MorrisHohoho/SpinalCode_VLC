@@ -64,9 +64,9 @@ void getDecodedMessage(struct MultiTree *node, char *decoded_message, int len, i
     }
 }
 
-void SpinalDecode(const char *symbols, char *decoded_message, int message_len, int k, int c, int B)
+void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decoded_message, int message_len, int k, int c, int B)
 {
-    int symbols_integer_len = strlen(symbols) * 8 / c;
+    int symbols_integer_len = symbols_packet_len * 8 / c;
     int symbols_integer[symbols_integer_len];
 
     for (int i = 0; i < symbols_integer_len; i++)
@@ -142,9 +142,9 @@ void SpinalDecode(const char *symbols, char *decoded_message, int message_len, i
         if((i-1)%B==0)
         minCost=INT32_MAX;       
         struct MultiTree* current_node = beam.pfVectorGet(&beam,i);
-        for(int j =i+B;j<i+B+4;j++)
+        for(int j =i+B;j<i+B+B;j++)
         {
-            if(j<29)
+            if(j<beam.pfVectorTotal(&beam))
             {
             struct MultiTree* tmp_node = beam.pfVectorGet(&beam,j);
             if(tmp_node->parent==current_node)
@@ -154,7 +154,7 @@ void SpinalDecode(const char *symbols, char *decoded_message, int message_len, i
                 {
                     best_node=current_node;
                     minCost=tmp_cost;
-                    if(j>=25)
+                    if(j>=beam.pfVectorTotal(&beam)-B)
                     {
                         best_node=tmp_node;
                     }
@@ -175,7 +175,7 @@ void SpinalDecode(const char *symbols, char *decoded_message, int message_len, i
     }
     best_node=tailNode;
 
-    getDecodedMessage(best_node,decoded_message,4,k);
+    getDecodedMessage(best_node,decoded_message,message_len,k);
 }
 
 void swap_candidates(struct Candidate *a, struct Candidate *b)
