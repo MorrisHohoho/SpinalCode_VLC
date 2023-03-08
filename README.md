@@ -11,4 +11,4 @@ Still in Development
 
 # Note
 If the message is consisted of all numbers(in ascii), hash collision is serve.
-But if we put some letters between the numbers, the probability of decoding right is high.
+But if we put some letters between the numbers, the probability of decoding correctly is high.
