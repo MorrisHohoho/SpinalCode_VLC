@@ -12,8 +12,9 @@ int B = 4; //
 
 int main()
 {
-    // byte = char, ASCII编码，每个8位
-    char *message = "1233";    
+    // byte = char, char encoded in ASCII, 8 bits per char.
+    //Totally 256bits.
+    char *message = "cargoforwardin2021QA123490010XCA";    
     int message_len = strlen(message);
     int symbol_packet_len = (message_len * 8 / k) * c / 8;
     char symbols[symbol_packet_len];
@@ -28,7 +29,10 @@ int main()
     char decoded_message[message_len];
     for(int i=0;i<message_len;i++)
     decoded_message[i]='\0';
-    SpinalDecode(symbols,decoded_message,message_len,k,c,B);
+    SpinalDecode(symbols,symbol_packet_len,decoded_message,message_len,k,c,B);
+
+    for(int i=0;i<message_len;i++)
+    printf("%c",decoded_message[i]);
 
     return 0;
 }
