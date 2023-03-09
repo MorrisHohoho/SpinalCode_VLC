@@ -3,86 +3,29 @@
 #include "decoder/decoder.h"
 #include "multinodetree/multinodetree.h"
 
-
-//ERROR1:The implementation of Multinode Tree is using malloc. 
-//       But, I do not free them yet. 
-
-//ERROR2:Hash Collision still happens. Perhaps Hamming Code can solve this problem.
+extern int k;
+extern int c;
+extern int B;
 
 
-void Symbols2Int(const char *symbols, int *res, int len, int c)
-{
-    int pointer = 0;
-    int count = 0;
 
-    for (int i = 0; i < len; i++)
-    {
-        for (int j = 0; j < c; j++)
-        {
-            res[i] |= ((symbols[count] & (1 << (8 - pointer - 1))) >> (8 - pointer - 1)) == 1 ? (1 << (c - j - 1)) : 0;
-            ++pointer;
-            if (pointer == 8)
-            {
-                ++count;
-                pointer = 0;
-            }
-        }
-    }
-}
-
-void getDecodedSymbols(struct MultiTree *pointer, int *decoded_symbol, int len, int B)
-{
-
-    int tmp_cost[B];
-    for (int i = 0; i < B; i++)
-        tmp_cost[i] = 0;
-    for (int i = 0; i < len; i++)
-    {
-        decoded_symbol[i] = pointer->child[0]->message_int;
-        pointer = pointer->child[0];
-    }
-}
-
-void getDecodedMessage(struct MultiTree *node, char *decoded_message, int len, int k)
-{
-    int pointer = 0;
-    int counter = 0;
-    for (int i = len-1; i >=0; i--)
-    {
-        
-        for (int j = 0; j < 8; j++)
-        {
-            int decoded_symbol = node->message_int;
-            decoded_message[i] |= ((decoded_symbol & (1 <<pointer))) >> pointer == 1 ? (1 << j) : 0;
-            ++pointer;
-            if (pointer == k)
-            {
-                node = node->parent;
-                pointer = 0;
-            }
-        }
-    }
-}
-
-void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decoded_message, int message_len, int k, int c, int B)
+void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decoded_message, int message_len)
 {
     int symbols_integer_len = symbols_packet_len * 8 / c;
     int symbols_integer[symbols_integer_len];
 
     for (int i = 0; i < symbols_integer_len; i++)
         symbols_integer[i] = 0;
-    Symbols2Int(symbols, symbols_integer, symbols_integer_len, c);
+    Symbols2Int(symbols, symbols_integer, symbols_integer_len);
 
     // Create Root
     struct MultiTree root = {0, 0, 0, -1, 0, NULL, {NULL}};
-    BuildChild(&root, symbols_integer, k, c);
-    // PruningTree(&root, k, B);
+    BuildChild(&root, symbols_integer);
 
     /******BUILDING PRUNING TREE*********/
     VECTOR_INIT(beam);
     beam.pfVectorAdd(&beam, &root);
     VECTOR_INIT(candidate_vec);
-
     for (int i = 1; i < symbols_integer_len ; i++)
     {
         // for T in beam
@@ -98,9 +41,9 @@ void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decode
                     break;
 
                 // Expand T' from depth d-1 to depth d.
-                BuildChild(tmp_root->child[z], symbols_integer, k, c);
+                BuildChild(tmp_root->child[z], symbols_integer);
                 // Compute and store path_cost in expanded nodes.
-                SortingTree(tmp_root->child[z], k);
+                SortingTree(tmp_root->child[z]);
                 int tmp_cost = tmp_root->child[z]->cost + tmp_root->child[z]->child[0]->cost;
 
                 struct Candidate tmp_candidate = {tmp_cost, tmp_root->child[z]};
@@ -175,16 +118,39 @@ void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decode
     }
     best_node=tailNode;
 
-    getDecodedMessage(best_node,decoded_message,message_len,k);
+    getDecodedMessage(best_node,decoded_message,message_len);
 }
 
-void swap_candidates(struct Candidate *a, struct Candidate *b)
+void getDecodedMessage(struct MultiTree *node, char *decoded_message, int len)
 {
-    struct Candidate c;
-    c = *b;
-    *b = *a;
-    *a = c;
+    int pointer = 0;
+    int counter = 0;
+    for (int i = len-1; i >=0; i--)
+    {
+        
+        for (int j = 0; j < 8; j++)
+        {
+            int decoded_symbol = node->message_int;
+            decoded_message[i] |= ((decoded_symbol & (1 <<pointer))) >> pointer == 1 ? (1 << j) : 0;
+            ++pointer;
+            if (pointer == k)
+            {
+                node = node->parent;
+                pointer = 0;
+            }
+        }
+    }
 }
+
+
+void add_candidates(struct Candidate *head, struct Candidate *NEX)
+{
+    head->next = (struct Candidate *)malloc(sizeof(struct Candidate));
+    head->next->cost = NEX->cost;
+    head->next->tree = NEX->tree;
+    head->next->next = NULL;
+}
+
 void sorting_candidates(vector *candidates, int l, int r)
 {
 
@@ -221,10 +187,22 @@ void sorting_candidates(vector *candidates, int l, int r)
     sorting_candidates(candidates, l, j), sorting_candidates(candidates, j + 1, r);
 }
 
-void add_candidates(struct Candidate *head, struct Candidate *NEX)
+void Symbols2Int(const char *symbols, uint32_t *res, int len)
 {
-    head->next = (struct Candidate *)malloc(sizeof(struct Candidate));
-    head->next->cost = NEX->cost;
-    head->next->tree = NEX->tree;
-    head->next->next = NULL;
+    int pointer = 0;
+    int count = 0;
+
+    for (int i = 0; i < len; i++)
+    {
+        for (int j = 0; j < c; j++)
+        {
+            res[i] |= ((symbols[count] & (1 << (8 - pointer - 1))) >> (8 - pointer - 1)) == 1 ? (1 << (c - j - 1)) : 0;
+            ++pointer;
+            if (pointer == 8)
+            {
+                ++count;
+                pointer = 0;
+            }
+        }
+    }
 }

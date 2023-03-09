@@ -5,7 +5,10 @@
 #include "encoder/encoder.h"
 #include "jenkins_hash/spooky-c.h"
 
-void BuildChild(struct MultiTree* parent,int *symbol,int k,int c)
+extern int k;
+extern int c;
+
+void BuildChild(struct MultiTree* parent,int *symbol)
 {
     RNG tmp_rng;
     int predict_symbol;
@@ -16,18 +19,17 @@ void BuildChild(struct MultiTree* parent,int *symbol,int k,int c)
         //Create SpineValue
         uint32_t predict_message=i;  
         tmp_rng.spineValue=spooky_hash32(&predict_message,sizeof(predict_message),parent->spine_value);
-        tmp_rng.c=c;
 
-        //Create predict symbol
+        //Create specualted symbol
         srand(tmp_rng.spineValue);
         int range = 1<<c;
         predict_symbol = rand()%range;
 
-        //Compute the cost
+        //Calculate the cost using l2 distance.
         tmp_cost = (predict_symbol-symbol[depth])*(predict_symbol-symbol[depth]);
 
-        //填充子节点
-        parent->child[i]=(struct MultiTree*)malloc(sizeof(struct MultiTree));
+        //Fiil the Child node.
+        parent->child[i]=(struct MultiTree*)malloc(sizeof(struct MultiTree));       //Waring: Haven't "free"!
         parent->child[i]->message_int=i;
         parent->child[i]->rng=predict_symbol;
         parent->child[i]->spine_value=tmp_rng.spineValue;
@@ -61,20 +63,7 @@ void quick_sort(struct MultiTree* node,int l,int r)
     quick_sort(node,l,j),quick_sort(node,j+1,r);
 }
 
-void PruningTree(struct MultiTree* parent,int k,int B)
-{
-    //Select B trees whose cost is the min;
-    quick_sort(parent,0,(1<<k)-1);
-
-    //Free the memory of which is not used.
-    for(int i=B;i<1<<k;i++)
-    {
-        free(parent->child[i]);
-        parent->child[i]=NULL;
-    }
-}
-
-void SortingTree(struct MultiTree* parent,int k)
+void SortingTree(struct MultiTree* parent)
 {
         quick_sort(parent,0,(1<<k)-1);
 }
