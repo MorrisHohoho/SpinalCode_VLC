@@ -17,6 +17,8 @@ int main()
     char *message = "cargoforwardin2021QA123490010XCA";    
     int message_len = strlen(message);
     int symbol_packet_len = (message_len * 8 / k) * c / 8;
+    if(((message_len * 8 / k) * c) % 8!=0)
+    symbol_packet_len++;
     char symbols[symbol_packet_len];
     SpinalEncode(message, symbols,symbol_packet_len, k, c);
 
