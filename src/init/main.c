@@ -6,16 +6,20 @@
 #include "decoder/decoder.h"
 
 int k = 4; // Each message packet has k bits;
-int c = 8; // Each transmitted symbol has c bits;
+int c = 6; // Each transmitted symbol has c bits;
 int B = 4; // B nodes kept after pruning.
 
 int main()
 {
     // byte = char, char encoded in ASCII, 8 bits per char.
-    char *message = "Wow Spinal code is cool lol";    
+    char *message = "AAASSSDDD";    
     int message_len = strlen(message);
 
-    int symbol_packet_len = (message_len * 8 / k) * c / 8;
+    int tmp_len = message_len*8/k;
+    if(message_len*8%k!=0)
+    tmp_len++;
+
+    int symbol_packet_len = tmp_len * c / 8;
     if(((message_len * 8 / k) * c) % 8!=0)
     symbol_packet_len++;
 

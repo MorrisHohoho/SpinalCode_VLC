@@ -11,7 +11,9 @@ extern int B;
 
 void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decoded_message, int message_len)
 {
-    int symbols_integer_len = symbols_packet_len * 8 / c;
+    int symbols_integer_len = message_len*8/k;
+    if(message_len*8%k!=0)
+    symbols_integer_len++;
     int symbols_integer[symbols_integer_len];
 
     for (int i = 0; i < symbols_integer_len; i++)
