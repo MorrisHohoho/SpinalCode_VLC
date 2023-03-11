@@ -10,7 +10,7 @@ SpinalCode implementation in C.
 
 
 # Note
-1. If the message is consisted of all numbers(in ascii), hash collision is serve.But if we put some letters between the numbers, the probability of decoding correctly is high.
+1. c/k is bigger the probability of symbol collision is lower.
 
 2. If change k, the definition ```CHILD_NUMS``` in ```multinodetree.h``` should been changed too.
 

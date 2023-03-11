@@ -44,7 +44,7 @@ void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decode
                 BuildChild(tmp_root->child[z], symbols_integer);
                 // Compute and store path_cost in expanded nodes.
                 SortingTree(tmp_root->child[z]);
-                int tmp_cost = tmp_root->child[z]->cost + tmp_root->child[z]->child[0]->cost;
+                int tmp_cost = tmp_root->child[z]->child[0]->cost;
 
                 struct Candidate tmp_candidate = {tmp_cost, tmp_root->child[z]};
                 add_candidates(candidate_pointer, &tmp_candidate);

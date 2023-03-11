@@ -27,6 +27,7 @@ void BuildChild(struct MultiTree* parent,int *symbol)
 
         //Calculate the cost using l2 distance.
         tmp_cost = (predict_symbol-symbol[depth])*(predict_symbol-symbol[depth]);
+        tmp_cost+=parent->cost;
 
         //Fiil the Child node.
         parent->child[i]=(struct MultiTree*)malloc(sizeof(struct MultiTree));       //Waring: Haven't "free"!
