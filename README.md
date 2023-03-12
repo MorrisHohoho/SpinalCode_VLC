@@ -12,6 +12,6 @@ SpinalCode implementation in C.
 # Note
 1. c/k is bigger the probability of symbol collision is lower.
 
-2. If change k, the definition ```CHILD_NUMS``` in ```multinodetree.h``` should been changed too.
+2. If change k, the definition ```CHILD_NUMS``` in ```multinodetree.h``` should be changed too.
 
-3. The implementation of multinodetree is to use ```malloc```, but the memory haven't been ```free``` when the ```SpinalDecode``` function is over.
+3. The implementation of multinodetree is to use ```malloc```, but the memory hasn't been ```free``` when the ```SpinalDecode``` function is over.
