@@ -1,40 +1,28 @@
-#include <stdio.h>
-#include <string.h>
-#include "jenkins_hash/spooky-c.h"
-#include "multinodetree/multinodetree.h"
 #include "encoder/encoder.h"
 #include "decoder/decoder.h"
 
-int k = 4; // Each message packet has k bits;
-int c = 6; // Each transmitted symbol has c bits;
-int B = 4; // B nodes kept after pruning.
+#include <stdio.h>
 
-int main()
+
+int main(int argc, char**argv)
 {
-    // byte = char, char encoded in ASCII, 8 bits per char.
-    char *message = "AAASSSDDD";    
-    int message_len = strlen(message);
+    char *message = "1234";
+    uint8_t *symbols=SpinalEncode(message);
+    printf("origin:%s\t",message);
 
-    int tmp_len = message_len*8/k;
-    if(message_len*8%k!=0)
-    tmp_len++;
+    printf("symbols:");
+    for(int i=0;i<SPINE_LENGTH*PASS;i++)
+    {
+        printf("%d ",symbols[i]);
+    }
+    printf("\n");
 
-    int symbol_packet_len = tmp_len * c / 8;
-    if(((message_len * 8 / k) * c) % 8!=0)
-    symbol_packet_len++;
+    uint8_t decoded_message[MES_LENGTH+1];
+    decoded_message[MES_LENGTH]='\0';
+    SpinalDecode(symbols,decoded_message);
+    free(symbols);
 
-
-    char symbols[symbol_packet_len];    //symbol transmited in VLC Channel
-    SpinalEncode(message, symbols,symbol_packet_len);
-
-    /************************ Step 3: Decoding ***********************/
-    char decoded_message[message_len];
-    for(int i=0;i<message_len;i++)
-    decoded_message[i]='\0';
-    SpinalDecode(symbols,symbol_packet_len,decoded_message,message_len);
-
-    for(int i=0;i<message_len;i++)
-    printf("%c",decoded_message[i]);
-
+    printf("decoded:%s",decoded_message);
+    printf("\n");
     return 0;
 }

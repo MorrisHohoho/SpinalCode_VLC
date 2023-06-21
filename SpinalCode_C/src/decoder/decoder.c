@@ -1,210 +1,147 @@
 #include <string.h>
 #include <stdint.h>
 #include "decoder/decoder.h"
-#include "multinodetree/multinodetree.h"
 
-extern int k;
-extern int c;
-extern int B;
+static  Wavefront self_wavefront[1024]={0};
+static int wave_front_length=1;
+static int node_depth=0;
+static int spine_length=SPINE_LENGTH;
 
-
-
-void SpinalDecode(const char *symbols, const int symbols_packet_len,char *decoded_message, int message_len)
+int min_subtree_nodes(Wavefront* subtree)
 {
-    int symbols_integer_len = message_len*8/k;
-    if(message_len*8%k!=0)
-    symbols_integer_len++;
-    int symbols_integer[symbols_integer_len];
-
-    for (int i = 0; i < symbols_integer_len; i++)
-        symbols_integer[i] = 0;
-    Symbols2Int(symbols, symbols_integer, symbols_integer_len);
-
-    // Create Root
-    struct MultiTree root = {0, 0, 0, -1, 0, NULL, {NULL}};
-    BuildChild(&root, symbols_integer);
-
-    /******BUILDING PRUNING TREE*********/
-    VECTOR_INIT(beam);
-    beam.pfVectorAdd(&beam, &root);
-    VECTOR_INIT(candidate_vec);
-    for (int i = 1; i < symbols_integer_len ; i++)
-    {
-        // for T in beam
-        struct Candidate dummyHead = {0, NULL, NULL};
-        struct Candidate *candidate_pointer = &dummyHead;
-        for (int j = 0; j < beam.pfVectorTotal(&beam); j++)
-        {
-            // for T' in subtrees of (T)
-            struct MultiTree *tmp_root = beam.pfVectorGet(&beam, j);
-            for (int z = 0; z < CHILD_NUMS; z++)
-            {
-                if (tmp_root->child[z]->child[0] != NULL)
-                    break;
-
-                // Expand T' from depth d-1 to depth d.
-                BuildChild(tmp_root->child[z], symbols_integer);
-                // Compute and store path_cost in expanded nodes.
-                SortingTree(tmp_root->child[z]);
-                int tmp_cost = tmp_root->child[z]->child[0]->cost;
-
-                struct Candidate tmp_candidate = {tmp_cost, tmp_root->child[z]};
-                add_candidates(candidate_pointer, &tmp_candidate);
-                candidate_pointer = candidate_pointer->next;
-                candidate_vec.pfVectorAdd(&candidate_vec, candidate_pointer);
-            }
-        }
-        // get B lowest cost candidates, breaking ties arbitrarily
-        sorting_candidates(&candidate_vec, 0, candidate_vec.pfVectorTotal(&candidate_vec)-1);
-        for (int tmpB = 0; tmpB < B; tmpB++)
-        {
-            struct Candidate* tmpBeam = (struct Candidate*)candidate_vec.pfVectorGet(&candidate_vec,tmpB);
-            beam.pfVectorAdd(&beam, tmpBeam->tree);
-        }
-
-        //Delete candidate_vec
-        int vecTotal=candidate_vec.pfVectorTotal(&candidate_vec);
-        for(int i=vecTotal-1;i>=0;i--)
-        candidate_vec.pfVectorDelete(&candidate_vec,i);
-
-        //Delete the tmp candidate
-        candidate_pointer=dummyHead.next;
-        for(int i=0;i<vecTotal;i++)
-        {
-            struct Candidate* tmpPointer = candidate_pointer;
-            if(candidate_pointer->next!=NULL)
-            candidate_pointer=candidate_pointer->next;
-            free(tmpPointer);
-        }
+    int ret= UINT16_MAX;
+    for(int i=0;i<(1<<(K*(D-1)));i++) {
+        if(subtree[i].path_metric<ret)
+            ret=subtree[i].path_metric;
     }
-
-
-    //Find the best node.
-    int minCost=INT32_MAX;
-    struct MultiTree* best_node = &root;
-    for(int i=1;i<beam.pfVectorTotal(&beam);i++)
-    {
-        if((i-1)%B==0)
-        minCost=INT32_MAX;       
-        struct MultiTree* current_node = beam.pfVectorGet(&beam,i);
-        for(int j =i+B;j<i+B+B;j++)
-        {
-            if(j<beam.pfVectorTotal(&beam))
-            {
-            struct MultiTree* tmp_node = beam.pfVectorGet(&beam,j);
-            if(tmp_node->parent==current_node)
-            {
-                int tmp_cost = current_node->cost+tmp_node->cost;
-                if(tmp_cost<minCost)
-                {
-                    best_node=current_node;
-                    minCost=tmp_cost;
-                    if(j>=beam.pfVectorTotal(&beam)-B)
-                    {
-                        best_node=tmp_node;
-                    }
-                }
-            }
-            }
-        }
-    }
-    int tailCost = INT32_MAX;
-    struct Multitree *tailNode ;
-    for(int i=0;i<CHILD_NUMS;i++)
-    {
-        if(best_node->child[i]->cost<=tailCost)
-        {
-            tailNode=best_node->child[i];
-            tailCost=best_node->child[i]->cost;
-        }
-    }
-    best_node=tailNode;
-
-    getDecodedMessage(best_node,decoded_message,message_len);
+    return ret;
 }
 
-void getDecodedMessage(struct MultiTree *node, char *decoded_message, int len)
+void sort_subtrees(Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX],int l, int r)
 {
-    int pointer = 0;
-    int counter = 0;
-    for (int i = len-1; i >=0; i--)
+    if(l>=r) return;
+
+
+    int i=l-1,j=r+1,x= min_subtree_nodes(subtrees[l+r>>1]);
+    while(i<j)
     {
-        
-        for (int j = 0; j < 8; j++)
+        do i++;while(min_subtree_nodes(subtrees[i])<x);
+        do j--;while(min_subtree_nodes(subtrees[j])>x);
+        if(i<j)
         {
-            int decoded_symbol = node->message_int;
-            decoded_message[i] |= ((decoded_symbol & (1 <<pointer))) >> pointer == 1 ? (1 << j) : 0;
-            ++pointer;
-            if (pointer == k)
-            {
-                node = node->parent;
-                pointer = 0;
-            }
+            Wavefront tmp[1<<K]={0};
+            memcpy(&tmp,&subtrees[i],sizeof(Wavefront)*(1<<K));
+            memcpy(&subtrees[i],&subtrees[j],sizeof(Wavefront)*(1<<K));
+            memcpy(&subtrees[j],&tmp,sizeof(Wavefront)*(1<<K));
         }
     }
+    sort_subtrees(subtrees,l,j);
+    sort_subtrees(subtrees,j+1,r);
+}
+
+ void prune_wavefront() {
+     const int num_subtree_nodes = (1 << (K * (D - 1)));
+     Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX] = {0};
+     int num_subtrees = 0;
+     while (wave_front_length > 0) {
+         memcpy(subtrees[num_subtrees], &self_wavefront[num_subtrees*num_subtree_nodes], num_subtree_nodes * sizeof(Wavefront));
+         wave_front_length -= num_subtree_nodes;
+         num_subtrees++;
+     }
+     sort_subtrees(subtrees, 0, num_subtrees-1);
+
+     for (int counter_sub_trees = 0; counter_sub_trees < min(num_subtrees, B); counter_sub_trees++) {
+         memcpy(&self_wavefront[counter_sub_trees * num_subtree_nodes],
+                subtrees[counter_sub_trees],
+                num_subtree_nodes * sizeof(Wavefront));
+         wave_front_length += num_subtree_nodes;
+     }
 }
 
 
-void add_candidates(struct Candidate *head, struct Candidate *NEX)
+void advance(const uint8_t* symbols)
 {
-    head->next = (struct Candidate *)malloc(sizeof(struct Candidate));
-    head->next->cost = NEX->cost;
-    head->next->tree = NEX->tree;
-    head->next->next = NULL;
-}
-
-void sorting_candidates(vector *candidates, int l, int r)
-{
-
-    int tmpl,tmpr=0;
-    if (l >= r)
-        return;
-    int i = l - 1, j = r + 1;
-    struct Candidate *left;
-    struct Candidate *right;
-    struct Candidate *mid = (struct Candidate *)candidates->pfVectorGet(candidates, (l + r) >> 1);
-    int x = mid->cost;
-    while (i < j)
+    Wavefront new_wavefront[WAVEFRONT_MAX]={0};
+    int tmp_wave_front_length=0;
+    for(int i=0;i<wave_front_length;i++)
     {
-        do
+        for(int edge=0;edge<(1<<K);edge++)
         {
-            i++;
-            left = (struct Candidate *)candidates->pfVectorGet(candidates, i);
-        }while (left->cost < x);
-
-        do
-        {
-            j--;
-            right = (struct Candidate *)candidates->pfVectorGet(candidates, j);
-        }while (right->cost > x);
-
-        if (i < j)
-        {
-            struct Candidate *tmp = left;
-            
-            candidates->pfVectorSet(candidates,i,right);
-            candidates->pfVectorSet(candidates,j,tmp);
-        }
-    }
-    sorting_candidates(candidates, l, j), sorting_candidates(candidates, j + 1, r);
-}
-
-void Symbols2Int(const char *symbols, uint32_t *res, int len)
-{
-    int pointer = 0;
-    int count = 0;
-
-    for (int i = 0; i < len; i++)
-    {
-        for (int j = 0; j < c; j++)
-        {
-            res[i] |= ((symbols[count] & (1 << (8 - pointer - 1))) >> (8 - pointer - 1)) == 1 ? (1 << (c - j - 1)) : 0;
-            ++pointer;
-            if (pointer == 8)
+            uint32_t new_spine_value = hash_func(self_wavefront[i].spine_value, edge);
+            RNG rng;
+            set_rng(&rng,new_spine_value);
+            int edge_metric =0;
+            for(int received_symbol=0;received_symbol<strlen(symbols);received_symbol++)
             {
-                ++count;
-                pointer = 0;
+               int node_symbol= map_func(next(&rng));
+               int distance = symbols[received_symbol]-node_symbol;
+               edge_metric+=distance*distance;
             }
+            int new_path_metric = self_wavefront[i].path_metric+edge_metric;
+            new_wavefront[tmp_wave_front_length].path_metric=new_path_metric;
+            new_wavefront[tmp_wave_front_length].spine_value=new_spine_value;
+            for(int j=0;j<node_depth;j++)
+            {
+                new_wavefront[tmp_wave_front_length].path[j]=self_wavefront[i].path[j];
+            }
+            new_wavefront[tmp_wave_front_length].path[node_depth]=edge;
+            tmp_wave_front_length++;
         }
     }
+    memcpy(self_wavefront,new_wavefront,tmp_wave_front_length*sizeof(Wavefront));
+    wave_front_length=tmp_wave_front_length;
+    node_depth++;
+    prune_wavefront();
+
+}
+
+static void inline initWavefront()
+{
+    self_wavefront->path_metric=0;
+    self_wavefront->spine_value=0;
+}
+
+static void get_most_likely(char* ret)
+{
+    int best_node=0;
+    int tmp = UINT16_MAX;
+    for(int i=0;i<wave_front_length;i++)
+    {
+        if(self_wavefront[i].path_metric<tmp)
+        {
+            tmp=self_wavefront[i].path_metric;
+            best_node=i;
+        }
+    }
+
+    uint64_t message_as_number =0;
+    for (int i=node_depth;i>=0;i--)
+    {
+        message_as_number = (message_as_number<<K)|self_wavefront[best_node].path[i];
+    }
+
+    int n = (node_depth*K+7)/8;
+    for(int i=0;i<n;i++)
+    {
+        ret[i]=(char)message_as_number&0xFF;
+        message_as_number>>=8;
+    }
+}
+void SpinalDecode(const uint8_t *symbols, uint8_t *decoded_message)
+{
+
+    initWavefront();
+
+    uint8_t tmp4advance[PASS+1];
+    for(int i=0;i<spine_length;i++)
+    {
+        for(int j=0;j<PASS;j++)
+        {
+            tmp4advance[j]=symbols[i+j*spine_length];
+        }
+        tmp4advance[PASS]='\0';
+        advance(tmp4advance);
+    }
+
+    get_most_likely(decoded_message);
 }
