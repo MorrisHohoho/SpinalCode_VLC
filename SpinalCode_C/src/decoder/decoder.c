@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "decoder/decoder.h"
 
-static  Wavefront self_wavefront[1024]={0};
+static  Wavefront self_wavefront[WAVEFRONT_MAX]={0};
 static int wave_front_length=1;
 static int node_depth=0;
 static int spine_length=SPINE_LENGTH;
@@ -97,8 +97,9 @@ void advance(const uint8_t* symbols)
 
 static void inline initWavefront()
 {
-    self_wavefront->path_metric=0;
-    self_wavefront->spine_value=0;
+    memset(self_wavefront,0,sizeof(Wavefront)*WAVEFRONT_MAX);
+    wave_front_length=1;
+    node_depth=0;
 }
 
 static void get_most_likely(char* ret)

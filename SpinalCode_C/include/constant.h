@@ -8,7 +8,7 @@
 #define MES_LENGTH 4  //MAX_LENGTH is 8, because UINT64_MAX is 8 bytes
 
 //Spinalcodes parameters
-#define K 4 //BUG: if K >4, the program will crash
+#define K 3 //BUG: if K >4, the program will crash
 #define C 6  //MAX C is 8 because of the size of uint8_t
 #define B 4 //BUG: if B >4, the program will crash
 #define D 2 //BUG: if D >2, the program will crash
