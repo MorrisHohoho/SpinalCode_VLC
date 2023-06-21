@@ -11,4 +11,4 @@ So in this C version, I choose k=4, B=4, d=2 which is as same as the original py
 ## BUGs
 1. k or B > 4, the program will crash.
 2. d >2, the program will also crash.
-Perhaps the stack is overflow?
+The reson of such bugs is that all the predicted nodes are stored in Stack.(I do not use malloc) And when the k,B,d is increasing, the memory they need is also increasing, i.e. when k=5, the new_wave_front needs almost 2MB. Thus, the stack overflow.(Have used Valgrind to verify this point).
