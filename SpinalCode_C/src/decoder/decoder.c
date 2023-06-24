@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdint.h>
+#include <malloc.h>
 #include "decoder/decoder.h"
 
 static  Wavefront self_wavefront[WAVEFRONT_MAX]={0};
@@ -17,7 +18,7 @@ int min_subtree_nodes(Wavefront* subtree)
     return ret;
 }
 
-void sort_subtrees(Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX],int l, int r)
+void sort_subtrees(Wavefront**subtrees,int l, int r)
 {
     if(l>=r) return;
 
@@ -30,9 +31,9 @@ void sort_subtrees(Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX],int l, int r)
         if(i<j)
         {
             Wavefront tmp[1<<K]={0};
-            memcpy(&tmp,&subtrees[i],sizeof(Wavefront)*(1<<K));
-            memcpy(&subtrees[i],&subtrees[j],sizeof(Wavefront)*(1<<K));
-            memcpy(&subtrees[j],&tmp,sizeof(Wavefront)*(1<<K));
+            memcpy(&tmp,subtrees[i],sizeof(Wavefront)*(1<<K));
+            memcpy(subtrees[i],subtrees[j],sizeof(Wavefront)*(1<<K));
+            memcpy(subtrees[j],&tmp,sizeof(Wavefront)*(1<<K));
         }
     }
     sort_subtrees(subtrees,l,j);
@@ -41,7 +42,13 @@ void sort_subtrees(Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX],int l, int r)
 
  void prune_wavefront() {
      const int num_subtree_nodes = (1 << (K * (D - 1)));
-     Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX] = {0};
+//     Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX] = {0};
+     Wavefront** subtrees= malloc(sizeof(Wavefront*)*SUBTREES_MAX);
+     for(int i=0;i<SUBTREES_MAX;i++)
+     {
+            subtrees[i]=malloc(sizeof(Wavefront)*num_subtree_nodes);
+            memset(subtrees[i],0,sizeof(Wavefront)*num_subtree_nodes);
+     }
      int num_subtrees = 0;
      while (wave_front_length > 0) {
          memcpy(subtrees[num_subtrees], &self_wavefront[num_subtrees*num_subtree_nodes], num_subtree_nodes * sizeof(Wavefront));
@@ -56,12 +63,19 @@ void sort_subtrees(Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX],int l, int r)
                 num_subtree_nodes * sizeof(Wavefront));
          wave_front_length += num_subtree_nodes;
      }
+     for(int i=0;i<SUBTREES_MAX;i++)
+     {
+         free(subtrees[i]);
+     }
+     free(subtrees);
 }
 
 
 void advance(const uint8_t* symbols)
 {
-    Wavefront new_wavefront[WAVEFRONT_MAX]={0};
+//    Wavefront new_wavefront[WAVEFRONT_MAX]={0};
+    Wavefront* new_wavefront = malloc(sizeof(Wavefront)*WAVEFRONT_MAX);
+    memset(new_wavefront,0,sizeof(Wavefront)*WAVEFRONT_MAX);
     int tmp_wave_front_length=0;
     for(int i=0;i<wave_front_length;i++)
     {
@@ -91,6 +105,7 @@ void advance(const uint8_t* symbols)
     memcpy(self_wavefront,new_wavefront,tmp_wave_front_length*sizeof(Wavefront));
     wave_front_length=tmp_wave_front_length;
     node_depth++;
+    free(new_wavefront);
     prune_wavefront();
 
 }
