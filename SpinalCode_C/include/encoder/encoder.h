@@ -14,5 +14,5 @@
  * message : oringinal message;
  * @return: return transmitting symbols;
 */
-char* SpinalEncode(const char* message);
+uint8_t * SpinalEncode(const char* message);
 #endif

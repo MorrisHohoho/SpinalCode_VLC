@@ -30,7 +30,7 @@ static inline void diviedMessage(const char *s, uint32_t *res)
     }
 }
 
-char*  SpinalEncode(const char* message)
+uint8_t *  SpinalEncode(const char* message)
 {
 
     uint32_t divideMessage[spine_length];

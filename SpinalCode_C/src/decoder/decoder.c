@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include "decoder/decoder.h"
 
+
 static  Wavefront self_wavefront[WAVEFRONT_MAX]={0};
 static int wave_front_length=1;
 static int node_depth=0;
@@ -23,7 +24,7 @@ void sort_subtrees(Wavefront**subtrees,int l, int r)
     if(l>=r) return;
 
 
-    int i=l-1,j=r+1,x= min_subtree_nodes(subtrees[l+r>>1]);
+    int i=l-1,j=r+1,x= min_subtree_nodes(subtrees[(l+r)>>1]);
     while(i<j)
     {
         do i++;while(min_subtree_nodes(subtrees[i])<x);
@@ -40,38 +41,38 @@ void sort_subtrees(Wavefront**subtrees,int l, int r)
     sort_subtrees(subtrees,j+1,r);
 }
 
- void prune_wavefront() {
-     const int num_subtree_nodes = (1 << (K * (D - 1)));
+void prune_wavefront() {
+    const int num_subtree_nodes = (1 << (K * (D - 1)));
 //     Wavefront subtrees[SUBTREES_MAX][WAVEFRONT_MAX] = {0};
-     Wavefront** subtrees= malloc(sizeof(Wavefront*)*SUBTREES_MAX);
-     for(int i=0;i<SUBTREES_MAX;i++)
-     {
-            subtrees[i]=malloc(sizeof(Wavefront)*num_subtree_nodes);
-            memset(subtrees[i],0,sizeof(Wavefront)*num_subtree_nodes);
-     }
-     int num_subtrees = 0;
-     while (wave_front_length > 0) {
-         memcpy(subtrees[num_subtrees], &self_wavefront[num_subtrees*num_subtree_nodes], num_subtree_nodes * sizeof(Wavefront));
-         wave_front_length -= num_subtree_nodes;
-         num_subtrees++;
-     }
-     sort_subtrees(subtrees, 0, num_subtrees-1);
+    Wavefront** subtrees= malloc(sizeof(Wavefront*)*SUBTREES_MAX);
+    for(int i=0;i<SUBTREES_MAX;i++)
+    {
+        subtrees[i]=malloc(sizeof(Wavefront)*num_subtree_nodes);
+        memset(subtrees[i],0,sizeof(Wavefront)*num_subtree_nodes);
+    }
+    int num_subtrees = 0;
+    while (wave_front_length > 0) {
+        memcpy(subtrees[num_subtrees], &self_wavefront[num_subtrees*num_subtree_nodes], num_subtree_nodes * sizeof(Wavefront));
+        wave_front_length -= num_subtree_nodes;
+        num_subtrees++;
+    }
+    sort_subtrees(subtrees, 0, num_subtrees-1);
 
-     for (int counter_sub_trees = 0; counter_sub_trees < min(num_subtrees, B); counter_sub_trees++) {
-         memcpy(&self_wavefront[counter_sub_trees * num_subtree_nodes],
-                subtrees[counter_sub_trees],
-                num_subtree_nodes * sizeof(Wavefront));
-         wave_front_length += num_subtree_nodes;
-     }
-     for(int i=0;i<SUBTREES_MAX;i++)
-     {
-         free(subtrees[i]);
-     }
-     free(subtrees);
+    for (int counter_sub_trees = 0; counter_sub_trees < min(num_subtrees, B); counter_sub_trees++) {
+        memcpy(&self_wavefront[counter_sub_trees * num_subtree_nodes],
+               subtrees[counter_sub_trees],
+               num_subtree_nodes * sizeof(Wavefront));
+        wave_front_length += num_subtree_nodes;
+    }
+    for(int i=0;i<SUBTREES_MAX;i++)
+    {
+        free(subtrees[i]);
+    }
+    free(subtrees);
 }
 
 
-void advance(const uint8_t* symbols)
+void advance(const char* symbols)
 {
 //    Wavefront new_wavefront[WAVEFRONT_MAX]={0};
     Wavefront* new_wavefront = malloc(sizeof(Wavefront)*WAVEFRONT_MAX);
@@ -87,9 +88,9 @@ void advance(const uint8_t* symbols)
             int edge_metric =0;
             for(int received_symbol=0;received_symbol<strlen(symbols);received_symbol++)
             {
-               int node_symbol= map_func(next(&rng));
-               int distance = symbols[received_symbol]-node_symbol;
-               edge_metric+=distance*distance;
+                int node_symbol= map_func(next(&rng));
+                int distance = symbols[received_symbol]-node_symbol;
+                edge_metric+=distance*distance;
             }
             int new_path_metric = self_wavefront[i].path_metric+edge_metric;
             new_wavefront[tmp_wave_front_length].path_metric=new_path_metric;
@@ -117,7 +118,7 @@ static void inline initWavefront()
     node_depth=0;
 }
 
-static void get_most_likely(char* ret)
+static void get_most_likely(uint8_t* ret)
 {
     int best_node=0;
     int tmp = UINT16_MAX;
@@ -148,7 +149,7 @@ void SpinalDecode(const uint8_t *symbols, uint8_t *decoded_message)
 
     initWavefront();
 
-    uint8_t tmp4advance[PASS+1];
+    char tmp4advance[PASS+1];
     for(int i=0;i<spine_length;i++)
     {
         for(int j=0;j<PASS;j++)
