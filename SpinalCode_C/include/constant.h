@@ -10,8 +10,8 @@
 //Spinalcodes parameters
 #define K 3 // no more than 8
 #define C 6  //MAX C is 8 because of the size of uint8_t
-#define B 4
-#define D 5 //can not be changed
+#define B 4  
+#define D 5 // if D > 5, the decoding latency is up to 12s.
 #define PASS 3
 
 #define WAVEFRONT_MAX B*(1<<(K*(D-1)))*(1<<(K*(D-1)))
