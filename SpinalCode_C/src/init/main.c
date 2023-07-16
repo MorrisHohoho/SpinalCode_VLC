@@ -2,6 +2,7 @@
 #include "decoder/decoder.h"
 
 #include <stdio.h>
+#include <time.h>
 
 void network_coding(uint8_t * symbolsA, uint8_t* symbolsB)
 {
@@ -54,7 +55,7 @@ void decode_OOK(uint8_t* menchster_code, uint8_t* symbols)
 
 int main(int argc, char**argv)
 {
-    char *message = "abcd";
+    char *message = "SCU!";
     char *mesB ="4321";
     uint8_t *symbols=SpinalEncode(message);
     uint8_t *test_symbols = SpinalEncode(mesB);
@@ -109,7 +110,11 @@ int main(int argc, char**argv)
 
     uint8_t decoded_message[MES_LENGTH+1];
     decoded_message[MES_LENGTH]='\0';
+    clock_t start_t,end_t;
+    start_t=clock();
     SpinalDecode(deOOK_symbols,decoded_message);
+    end_t=clock();
+    printf("time:%f\n",(double)(end_t-start_t)/CLOCKS_PER_SEC);
     free(symbols);
 
     printf("decoded:%s",decoded_message);

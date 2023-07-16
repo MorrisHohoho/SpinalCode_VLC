@@ -31,10 +31,10 @@ void sort_subtrees(Wavefront**subtrees,int l, int r)
         do j--;while(min_subtree_nodes(subtrees[j])>x);
         if(i<j)
         {
-            Wavefront tmp[1<<K]={0};
-            memcpy(&tmp,subtrees[i],sizeof(Wavefront)*(1<<K));
-            memcpy(subtrees[i],subtrees[j],sizeof(Wavefront)*(1<<K));
-            memcpy(subtrees[j],&tmp,sizeof(Wavefront)*(1<<K));
+            Wavefront tmp[1<<(K*(D-1))]={0};
+            memcpy(&tmp,subtrees[i],sizeof(Wavefront)*(1<<(K*(D-1))));
+            memcpy(subtrees[i],subtrees[j],sizeof(Wavefront)*(1<<(K*(D-1))));
+            memcpy(subtrees[j],&tmp,sizeof(Wavefront)*(1<<(K*(D-1))));
         }
     }
     sort_subtrees(subtrees,l,j);

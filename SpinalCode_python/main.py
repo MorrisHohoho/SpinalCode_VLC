@@ -11,15 +11,14 @@ This example produces constellation points with 8-bit precision. The noisy
 '''
 
 # some constants:
-
-k = 4
+k = 3
 c = 6
 precision = 6
 B = 4
-d = 4
+d = 3
 
 # Message to be encoded:
-message = "1234"
+message = "SCU!"
 
 # expected encoder output
 # expected_encoder_output = [184, 108, 36, 108, 253, 68, 204, 119, 243, 141, 170, 56, 101, 97, 252, 79, 95, 236, 207, 191,
@@ -63,28 +62,37 @@ if __name__ == '__main__':
     # assert (expected_encoder_output == symbols)
 
     # get average signal power
-    # signal_power = mapper.get_signal_average_power()
+    signal_power = mapper.get_signal_average_power()
     #
     # # what is the noise power and standard deviation when SNR is 10dB?
-    # noise_power = signal_power / 10.0
-    # noise_std_dev = math.sqrt(noise_power)
+    noise_power = signal_power / 10.0
+    noise_std_dev = math.sqrt(noise_power)
     #
     # # initialize random number generator. this seed is fixed constant in order
     # # to get deterministic results in this example.
-    # random.seed(314159265359)
+    random.seed(314159265359)
     #
     # # add white gaussian noise at 10dB to signal
     # print
     # "Adding white gaussian noise at 10dB."
-    # noisy_symbols = [sym + random.gauss(0, noise_std_dev) for sym in symbols]
-    # # round to closest integer
-    # noisy_symbols = [int(x + 0.5) for x in noisy_symbols]
-    # print
-    # "noisy symbols:", noisy_symbols
 
-    # instantiate decoder
+    print("len:",len(symbols))
+    for i in range(500):
+        noisy_symbols = [sym + random.gauss(0, noise_std_dev) for sym in symbols]
+        # # round to closest integer
+        noisy_symbols = [int(x + 0.5) for x in noisy_symbols]
+
+        with open('./k3.txt','a') as f:
+            for sym in noisy_symbols:
+                if(sym<0):
+                    sym&=0xff
+                f.write(str(sym)+' ')
+            f.write('\n')
+        print("noisy symbols:", noisy_symbols)
+    # # instantiate decoder
     decoder = Decoder(k, B, d, map_func)
-    # update decoder with gathered points
+    # # update decoder with gathered points
+    # noisy_symbols=[28, 65, 29, 42, 52, 18, 8, 41, 33, 35, 21, 58, -4, 45, -5, 50, 47, 6, 2, 40, 55, 62, 46, 34, 34, 19, 24, 42, 35, 24, 10, 14, 48, 39, 46, 55, 42, 52, 69, 10, 26, 14, 30, 45, 48, 62, 54, 27, 39, 55, 4, 52, 53, 32, 59, -1, 14, 16, 47, 17, 69, 61, 29, 44, 7, 40, 51, 60, 49, 6, 25, 65, 46, 45, 3, 16, 49, 3, 1, 26, 28, 11, 35, 53, 23, 12, 60, 33, 25, 53, 23, 39, 46, 40, 8, 72]
     for i in range(spine_length):
         decoder.advance([symbols[i],
                          symbols[i + spine_length],
@@ -92,6 +100,7 @@ if __name__ == '__main__':
 
     print(decoder.get_most_likely())
     print(decoder.get_most_likely().encode().hex())
+
 
     # make sure we got the message we started with
     # assert (decoder.get_most_likely() == message)

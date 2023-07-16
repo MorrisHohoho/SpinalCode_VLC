@@ -11,11 +11,11 @@
 #define K 3 // no more than 8
 #define C 6  //MAX C is 8 because of the size of uint8_t
 #define B 4
-#define D 2 //can not be changed
+#define D 5 //can not be changed
 #define PASS 3
 
-#define WAVEFRONT_MAX B*(1<<K)*(1<<K)
-#define SUBTREES_MAX B*(1<<K)
+#define WAVEFRONT_MAX B*(1<<(K*(D-1)))*(1<<(K*(D-1)))
+#define SUBTREES_MAX B*(1<<(K*(D-1)))
 #define SPINE_LENGTH ((8*MES_LENGTH+K-1)/K)
 #define PASS_LENGTH (SPINE_LENGTH*PASS)
 
