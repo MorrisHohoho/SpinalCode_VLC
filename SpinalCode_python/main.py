@@ -12,13 +12,13 @@ This example produces constellation points with 8-bit precision. The noisy
 
 # some constants:
 k = 3
-c = 6
-precision = 6
+c = 5
+precision = c
 B = 4
-d = 3
+d = 2
 
 # Message to be encoded:
-message = "SCU!"
+message = "SCUX"
 
 # expected encoder output
 # expected_encoder_output = [184, 108, 36, 108, 253, 68, 204, 119, 243, 141, 170, 56, 101, 97, 252, 79, 95, 236, 207, 191,
@@ -76,27 +76,32 @@ if __name__ == '__main__':
     # print
     # "Adding white gaussian noise at 10dB."
 
-    print("len:",len(symbols))
-    for i in range(500):
-        noisy_symbols = [sym + random.gauss(0, noise_std_dev) for sym in symbols]
-        # # round to closest integer
-        noisy_symbols = [int(x + 0.5) for x in noisy_symbols]
-
-        with open('./k3.txt','a') as f:
-            for sym in noisy_symbols:
-                if(sym<0):
-                    sym&=0xff
-                f.write(str(sym)+' ')
-            f.write('\n')
-        print("noisy symbols:", noisy_symbols)
+    # print("len:",len(symbols))
+    # for i in range(500):
+    #     noisy_symbols = [sym + random.gauss(0, noise_std_dev) for sym in symbols]
+    #     # # round to closest integer
+    #     noisy_symbols = [int(x + 0.5) for x in noisy_symbols]
+    #
+    #     with open('./c8.txt','a') as f:
+    #         for sym in noisy_symbols:
+    #             if(sym<0):
+    #                 sym&=0xff
+    #             f.write(str(sym)+' ')
+    #         f.write('\n')
+        # print("noisy symbols:", noisy_symbols)
     # # instantiate decoder
     decoder = Decoder(k, B, d, map_func)
     # # update decoder with gathered points
     # noisy_symbols=[28, 65, 29, 42, 52, 18, 8, 41, 33, 35, 21, 58, -4, 45, -5, 50, 47, 6, 2, 40, 55, 62, 46, 34, 34, 19, 24, 42, 35, 24, 10, 14, 48, 39, 46, 55, 42, 52, 69, 10, 26, 14, 30, 45, 48, 62, 54, 27, 39, 55, 4, 52, 53, 32, 59, -1, 14, 16, 47, 17, 69, 61, 29, 44, 7, 40, 51, 60, 49, 6, 25, 65, 46, 45, 3, 16, 49, 3, 1, 26, 28, 11, 35, 53, 23, 12, 60, 33, 25, 53, 23, 39, 46, 40, 8, 72]
+    # for i in range(spine_length):
+    #     decoder.advance([symbols[i],
+    #                      symbols[i + spine_length],
+    #                      symbols[i + 2 * spine_length]])
+    symbols=[27, 10, 11, 8, 13, 7, 31, 14, 31, 2, 10
+             , 16, 12, 4, 23, 8, 22, 10, 16, 16, 29, 26]
     for i in range(spine_length):
         decoder.advance([symbols[i],
-                         symbols[i + spine_length],
-                         symbols[i + 2 * spine_length]])
+                         symbols[i + spine_length]])
 
     print(decoder.get_most_likely())
     print(decoder.get_most_likely().encode().hex())

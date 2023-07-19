@@ -55,8 +55,8 @@ void decode_OOK(uint8_t* menchster_code, uint8_t* symbols)
 
 int main(int argc, char**argv)
 {
-    char *message = "SCU!";
-    char *mesB ="4321";
+    char *message = "Fo1!";
+    char *mesB ="NTU0";
     uint8_t *symbols=SpinalEncode(message);
     uint8_t *test_symbols = SpinalEncode(mesB);
     printf("origin:%s\t",message);
@@ -75,7 +75,7 @@ int main(int argc, char**argv)
     }
     printf("\n");
 
-    network_coding(symbols,test_symbols);
+//    network_coding(symbols,test_symbols);
     printf("network coding symbols:");
     for(int i=0;i<SPINE_LENGTH*PASS;i++)
     {
@@ -83,14 +83,14 @@ int main(int argc, char**argv)
     }
     printf("\n");
 
-    uint8_t menchster_symbols[PASS_LENGTH*12]={0};
+    uint8_t menchster_symbols[PASS_LENGTH*C*2]={0};
     menchster_coding(symbols,menchster_symbols);
-//    printf("menchster coding symbols:");
-//    for(int i=0;i<SPINE_LENGTH*PASS*12;i++)
-//    {
-//        printf("%d",menchster_symbols[i]);
-//    }
-//    printf("\n");
+    printf("menchster coding symbols:");
+    for(int i=0;i<SPINE_LENGTH*PASS*C*2;i++)
+    {
+        printf("%d",menchster_symbols[i]);
+    }
+    printf("\n");
 
     uint8_t  deOOK_symbols[PASS_LENGTH]={0};
     decode_OOK(menchster_symbols,deOOK_symbols);
@@ -101,7 +101,7 @@ int main(int argc, char**argv)
     }
     printf("\n");
 
-    network_coding(deOOK_symbols,test_symbols);
+//    network_coding(deOOK_symbols,test_symbols);
     printf("network decoding symbols:");
     for(int i=0;i<SPINE_LENGTH*PASS;i++)
     {
@@ -112,8 +112,9 @@ int main(int argc, char**argv)
     decoded_message[MES_LENGTH]='\0';
     clock_t start_t,end_t;
     start_t=clock();
-    SpinalDecode(deOOK_symbols,decoded_message);
+//    SpinalDecode(deOOK_symbols,decoded_message);
     end_t=clock();
+    SpinalDecode(deOOK_symbols,decoded_message);
     printf("time:%f\n",(double)(end_t-start_t)/CLOCKS_PER_SEC);
     free(symbols);
 
@@ -121,3 +122,17 @@ int main(int argc, char**argv)
     printf("\n");
     return 0;
 }
+
+
+//int main()
+//{
+//    int a[30]={0};
+//    int b[10]={1,2,3,4,5,6,7,8,9,0};
+//    memcpy(&a[0],b,10*sizeof (int));
+//    memcpy(&a[20],b,10);
+////    memset(a,0,10);
+//    for(int i=0;i<30;i++)
+//    {
+//        printf("%d ",a[i]);
+//    }
+//}
