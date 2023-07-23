@@ -47,16 +47,17 @@ void decode_OOK(uint8_t* menchster_code, uint8_t* symbols)
         {
             symbols[i]|=menchster_code[index];
             index+=2;
+            if(j==C-1)
+                break;
             symbols[i]<<=1;
         }
-        symbols[i]>>=1;
     }
 }
 
 int main(int argc, char**argv)
 {
-    char *message = "Fo1!";
-    char *mesB ="NTU0";
+    char *message = "IloveSCU";
+    char *mesB ="SCUloveI";
     uint8_t *symbols=SpinalEncode(message);
     uint8_t *test_symbols = SpinalEncode(mesB);
     printf("origin:%s\t",message);
@@ -114,6 +115,16 @@ int main(int argc, char**argv)
     start_t=clock();
 //    SpinalDecode(deOOK_symbols,decoded_message);
     end_t=clock();
+
+//    uint8_t Xsymbols[]={
+//                        1,26,19,30,13,27,28,26,31,16,30,
+//                        17,10,3,28,28,3,0,31,30,19,16,};
+
+//    6,6,23,27,2,5,31,28,20,6,28,
+//            30,26,27,10,18,30,8,31,21,29,29,
+////            6,13,4,27,28,5,1,21,1,10,11
+//    SpinalDecode(Xsymbols,decoded_message);
+//    printf("decoded:%s\n",decoded_message);
     SpinalDecode(deOOK_symbols,decoded_message);
     printf("time:%f\n",(double)(end_t-start_t)/CLOCKS_PER_SEC);
     free(symbols);

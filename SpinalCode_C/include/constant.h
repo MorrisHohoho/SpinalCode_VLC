@@ -5,14 +5,15 @@
 #ifndef TEST_CONSTANT_H
 #define TEST_CONSTANT_H
 
-#define MES_LENGTH 4  //MAX_LENGTH is 8, because UINT64_MAX is 8 bytes
+#define MES_LENGTH 8
 
 //Spinalcodes parameters
 #define K 3 // no more than 8
 #define C 5  //MAX C is 8 because of the size of uint8_t
 #define B 4
 #define D 2 // if D > 5, the decoding latency is up to 12s.
-#define PASS 3
+#define PASS 1
+
 
 #if (D==1)
 #define WAVEFRONT_MAX B*(1<<(K*(D)))*(1<<(K*(D)))

@@ -11,14 +11,14 @@ This example produces constellation points with 8-bit precision. The noisy
 '''
 
 # some constants:
-k = 3
-c = 5
+k = 7
+c = 8
 precision = c
 B = 4
 d = 2
 
 # Message to be encoded:
-message = "SCUX"
+message = "IloveSCU"
 
 # expected encoder output
 # expected_encoder_output = [184, 108, 36, 108, 253, 68, 204, 119, 243, 141, 170, 56, 101, 97, 252, 79, 95, 236, 207, 191,
@@ -97,11 +97,13 @@ if __name__ == '__main__':
     #     decoder.advance([symbols[i],
     #                      symbols[i + spine_length],
     #                      symbols[i + 2 * spine_length]])
-    symbols=[27, 10, 11, 8, 13, 7, 31, 14, 31, 2, 10
-             , 16, 12, 4, 23, 8, 22, 10, 16, 16, 29, 26]
+    # symbols=[27, 10, 11, 8, 13, 7, 31, 14, 31, 2, 10
+    #          , 16, 12, 4, 23, 8, 22, 10, 16, 16, 29, 26]    # symbols=[27, 10, 11, 8, 13, 7, 31, 14, 31, 2, 10
+    #          , 16, 12, 4, 23, 8, 22, 10, 16, 16, 29, 26]
     for i in range(spine_length):
         decoder.advance([symbols[i],
-                         symbols[i + spine_length]])
+                         symbols[i + spine_length],
+                         symbols[i + 2 * spine_length]])
 
     print(decoder.get_most_likely())
     print(decoder.get_most_likely().encode().hex())

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <malloc.h>
+#include <stdio.h>
 #include "decoder/decoder.h"
 
 
@@ -144,7 +145,7 @@ static void get_most_likely(uint8_t* ret)
         }
     }
 
-    uint64_t message_as_number =0;
+    uint64_t message_as_number=0;
     for (int i=node_depth;i>=0;i--)
     {
         message_as_number = (message_as_number<<K)|self_wavefront[best_node].path[i];
@@ -173,5 +174,6 @@ void SpinalDecode(const uint8_t *symbols, uint8_t *decoded_message)
         advance(tmp4advance);
     }
 
+    printf("node_depth:%d\n",node_depth);
     get_most_likely(decoded_message);
 }
