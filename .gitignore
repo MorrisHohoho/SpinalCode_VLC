@@ -1,3 +1,8 @@
-/build
-/bin
-/.vscode
+**/build
+**/bin
+**/.vscode
+**/cmake-build-debug
+**/.idea
+**/venv
+**/__pycache__
+*.txt
