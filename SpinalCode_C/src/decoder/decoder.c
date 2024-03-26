@@ -146,16 +146,31 @@ static void get_most_likely(uint8_t* ret)
     }
 
     uint64_t message_as_number=0;
+    uint64_t total_bits = (node_depth+1)*3;
+    uint8_t bits_arr[total_bits];
+    uint64_t bit_counter = total_bits-1;
     for (int i=node_depth;i>=0;i--)
     {
-        message_as_number = (message_as_number<<K)|self_wavefront[best_node].path[i];
+//        message_as_number = (message_as_number<<K)|self_wavefront[best_node].path[i];
+        uint8_t temp = self_wavefront[best_node].path[i];
+        for(int j = K-1; j>=0; j--)
+        {
+            bits_arr[bit_counter] = (temp>>j)&0x01;
+            bit_counter--;
+        }
     }
 
-    int n = (node_depth*K+7)/8;
+    int n = total_bits/8;
     for(int i=0;i<n;i++)
     {
-        ret[i]=(char)message_as_number&0xFF;
-        message_as_number>>=8;
+        uint64_t temp = 0;
+        for(int j = (i * 8)+(8-1);j>= (i*8);j--)
+        {
+            temp |=bits_arr[j];
+            temp <<=1;
+        }
+        temp>>=1;
+        ret[i] = (char)temp&0xFF;
     }
 }
 void SpinalDecode(const uint8_t *symbols, uint8_t *decoded_message)
@@ -174,6 +189,5 @@ void SpinalDecode(const uint8_t *symbols, uint8_t *decoded_message)
         advance(tmp4advance);
     }
 
-    printf("node_depth:%d\n",node_depth);
     get_most_likely(decoded_message);
 }
